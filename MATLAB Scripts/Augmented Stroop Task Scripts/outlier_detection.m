@@ -1,10 +1,11 @@
+%% Function for IQR outlier detection regarding the reaction time
 function [indices_outlier,number_outlier] = outlier_detection(data)
-%detects IQR outlier and deletes rows
-global variable_in_question
-data = data.(variable_in_question);
+% Detects IQR outlier and returns their indices and number
+data = data.reaction_time;
+% Determine the outlier indices
 outlier = isoutlier(data, 'quartiles');
  
-%indicate rows with outliers plus their amount
+% Find rows with outliers plus their amount
 indices_outlier = find(outlier);
 number_outlier = height(indices_outlier);
 
