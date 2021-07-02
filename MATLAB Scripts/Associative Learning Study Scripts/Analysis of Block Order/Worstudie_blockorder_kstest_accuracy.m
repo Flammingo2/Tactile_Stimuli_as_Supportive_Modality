@@ -1,8 +1,8 @@
 %% DATA IMPORT
 % Import all data in from file named 'vp_dataset' to a table
-data = spreadsheetDatastore('vp_dataset.xlsx');
-data.SelectedVariableNames = {'VP_Nr', 'position', 'day', 'recall', 'visual_stimulus_text', 'word_list', 'number_recall', 'tactile', 'correct_answer', 'answer', 'accuracy', 'reaction_time'};
-data.VariableTypes = {'double','double', 'double', 'double', 'char', 'double', 'double' 'char', 'char', 'char', 'double', 'double'};
+data = spreadsheetDatastore('vp_dataset_mit_Blockreihenfolge.xlsx');
+data.SelectedVariableNames = {'VP_Nr', 'position', 'day', 'recall', 'visual_stimulus_text', 'word_list', 'number_recall', 'tactile', 'correct_answer', 'answer', 'accuracy', 'reaction_time','block_order'};
+data.VariableTypes = {'double','double', 'double', 'double', 'char', 'double', 'double' 'char', 'char', 'char', 'double', 'double', 'char'};
 data = read(data);
 
 %% Delete VP18
@@ -51,14 +51,14 @@ data_plot_accuracy = data;
 %% Descriptive Statistics
 % Get mean accuracies and reaction times
 % regarding levels of the factor day
-[means, grps] = grpstats([data.accuracy data.reaction_time], {data.day}, {'mean', 'gname'})
+[means, grps] = grpstats([data.accuracy data.reaction_time], {data.day}, {'mean', 'gname'});
 % regarding levels of the factor day and modality
 [means, grps] = grpstats([data.accuracy data.reaction_time], {data.day, data.tactile}, ...
-    {'mean', 'gname'})
+    {'mean', 'gname'});
 % regarding levels of the factor day, number of recall and modality
 [means, grps] = grpstats([data.accuracy data.reaction_time], ...
                     {data.day, data.number_recall, data.tactile}, ...
-                    {'mean', 'gname'})
+                    {'mean', 'gname'});
 
 %% Calculate means of accuracy and RT per treatment and VP
 [means, grps] = grpstats([data.accuracy data.reaction_time], ...
@@ -87,10 +87,14 @@ data(toDelete,:) = [];
 writetable(data, 'wortstudie_to_plot_RT.csv');
 data_plot_RT = data;
 
-%% Log Transformation only for the Accuracy
+%% Log Transformation on Accuracy and Reaction Time
+% Reaction Time LOG-transformation
+data_RT_log = array2table(log(data.reaction_time), ...
+                    'VariableNames', {'log_reaction_time'});
+data = [data data_RT_log];
 
 % Accuracy LOG-transformation
-data_accuracy_log = array2table(reallog(means_data.accuracy_mean), ...
+data_accuracy_log = array2table(log(means_data.accuracy_mean), ...
                     'VariableNames', {'log_accuracy_mean'});
 means_data_log = [means_data data_accuracy_log];
 
@@ -154,7 +158,7 @@ for column = 1:8
     % Apply the Lilliefors Test to all treatments
     [h,p,k,c] = lillietest(table2array(data_accuracy(:,column)));
     % Print out corresponding statement
-    if h == 0
+    if h == 1
         strcat("Accuracy data NOT normal distributed in condition ", num2str(column))
     else 
         strcat("Accuracy data normal distributed in ", num2str(column))
@@ -206,10 +210,10 @@ for pointer = 1:14
                 % trials up with NaNs (to be able to form a table with
                 % values of the same VP in a row
                 while height(condition) < 40
-                    condition = [condition; array2table(NaN(1,12),'VariableNames',condition.Properties.VariableNames)];                   
+                    condition = [condition; array2table(NaN(1,14),'VariableNames',condition.Properties.VariableNames)];                   
                 end
                 % Get data of all treatment for all VP each
-                conditions_RT.(strcat('subject_',num2str(subject), '_', num2str(column))) = condition.reaction_time;
+                conditions_RT.(strcat('subject_',num2str(subject), '_', num2str(column))) = condition.log_reaction_time;
 
                 column = column + 1;
             end
@@ -280,7 +284,7 @@ for column = 1:8
     % Test for each treatment of every subject
     [h,p,k,c] = lillietest(table2array(data_RT(:,column)));
     % Print out corresponding statement
-    if h == 0
+    if h == 1
         strcat("Reaction_time data NOT normal distributed in condition ", num2str(column))
     else 
         strcat("Reaction_time data normal distributed in ", num2str(column))
@@ -293,7 +297,7 @@ end
 
 % Get means with additional factor block order
 data = data_plot_accuracy;
-[means, grps] = grpstats([data.(variable_in_question) data.(other_variable)],...
+[means, grps] = grpstats([data.accuracy data.reaction_time],...
                 {data.VP_Nr, data.day, data.number_recall, data.tactile, data.block_order}, {'mean', 'gname'});
 
 % Create table with means and factor variables
