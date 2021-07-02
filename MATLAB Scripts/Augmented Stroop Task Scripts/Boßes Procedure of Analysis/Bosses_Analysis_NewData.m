@@ -189,7 +189,7 @@ for column = 1:8
     % Apply the Lilliefors Test to all treatments
     [h,p,k,c] = lillietest(table2array(data_accuracy(:,column)));
     % Print out corresponding statement
-    if h == 0
+    if h == 1
         strcat("Accuracy data NOT normal distributed in condition ", num2str(column))
     else 
         strcat("Accuracy data normal distributed in ", num2str(column))
@@ -322,7 +322,7 @@ for column = 1:8
     [h,p,k,c] = lillietest(table2array(data_RT(:,column)));
     
     % Print out corresponding statement
-    if h == 0
+    if h == 1
         strcat("Reaction_time data NOT normal distributed in condition ", num2str(column))
     else 
         strcat("Reaction_time data normal distributed in ", num2str(column))
